@@ -180,6 +180,7 @@ def get_salt_test_commands():
 def pkg_container(
     salt_factories,
     download_test_image,
+    repo_subpath,
     root_url,
     salt_release,
     tmp_path_factory,
@@ -218,6 +219,7 @@ def pkg_container(
                 salt_release,
                 downloads_path,
                 gpg_key_name,
+                repo_subpath,
             )
             yield download_test_image
         except Exception as exc:
@@ -270,6 +272,14 @@ def get_salt_release():
     return salt_release
 
 
+@pytest.fixture(
+    scope="module",
+    params=["latest", "minor", packaging.version.parse(get_salt_release()).major],
+)
+def repo_subpath(request):
+    return request.param
+
+
 @pytest.fixture(scope="module")
 def gpg_key_name(salt_release):
     if packaging.version.parse(salt_release) > packaging.version.parse("3005"):
@@ -291,12 +301,15 @@ def setup_redhat_family(
     downloads_path,
     os_name,
     gpg_key_name,
+    repo_subpath,
 ):
     arch = os.environ.get("SALT_REPO_ARCH") or "x86_64"
     if arch == "aarch64":
         arch = "arm64"
 
-    repo_url_base = f"{root_url}/{os_name}/{os_version}/{arch}/minor/{salt_release}"
+    repo_url_base = (
+        f"{root_url}/{os_name}/{os_version}/{arch}/{repo_subpath}/{salt_release}"
+    )
     gpg_file_url = f"{repo_url_base}/{gpg_key_name}"
     try:
         pytest.helpers.download_file(gpg_file_url, downloads_path / gpg_key_name)
@@ -347,6 +360,7 @@ def setup_amazon(
     salt_release,
     downloads_path,
     gpg_key_name,
+    repo_subpath,
 ):
     setup_redhat_family(
         container,
@@ -357,6 +371,7 @@ def setup_amazon(
         downloads_path,
         "amazon",
         gpg_key_name,
+        repo_subpath,
     )
 
 
@@ -368,6 +383,7 @@ def setup_redhat(
     salt_release,
     downloads_path,
     gpg_key_name,
+    repo_subpath,
 ):
     setup_redhat_family(
         container,
@@ -378,6 +394,7 @@ def setup_redhat(
         downloads_path,
         "redhat",
         gpg_key_name,
+        repo_subpath,
     )
 
 
@@ -389,6 +406,7 @@ def setup_fedora(
     salt_release,
     downloads_path,
     gpg_key_name,
+    repo_subpath,
 ):
     setup_redhat_family(
         container,
@@ -399,6 +417,7 @@ def setup_fedora(
         downloads_path,
         "fedora",
         gpg_key_name,
+        repo_subpath,
     )
 
 
@@ -410,6 +429,7 @@ def setup_photon(
     salt_release,
     downloads_path,
     gpg_key_name,
+    repo_subpath,
 ):
     setup_redhat_family(
         container,
@@ -420,6 +440,7 @@ def setup_photon(
         downloads_path,
         "photon",
         gpg_key_name,
+        repo_subpath,
     )
 
 
@@ -432,6 +453,7 @@ def setup_debian_family(
     downloads_path,
     os_name,
     gpg_key_name,
+    repo_subpath,
 ):
     arch = os.environ.get("SALT_REPO_ARCH") or "amd64"
     if arch == "aarch64":
@@ -443,7 +465,9 @@ def setup_debian_family(
     if ret.returncode != 0:
         pytest.fail("Failed to run: 'apt-get update -y'")
 
-    repo_url_base = f"{root_url}/{os_name}/{os_version}/{arch}/minor/{salt_release}"
+    repo_url_base = (
+        f"{root_url}/{os_name}/{os_version}/{arch}/{repo_subpath}/{salt_release}"
+    )
     gpg_file_url = f"{repo_url_base}/{gpg_key_name}"
     try:
         pytest.helpers.download_file(gpg_file_url, downloads_path / gpg_key_name)
@@ -490,6 +514,7 @@ def setup_debian(
     salt_release,
     downloads_path,
     gpg_key_name,
+    repo_subpath,
 ):
     setup_debian_family(
         container,
@@ -500,6 +525,7 @@ def setup_debian(
         downloads_path,
         "debian",
         gpg_key_name,
+        repo_subpath,
     )
 
 
@@ -511,6 +537,7 @@ def setup_ubuntu(
     salt_release,
     downloads_path,
     gpg_key_name,
+    repo_subpath,
 ):
     setup_debian_family(
         container,
@@ -521,11 +548,12 @@ def setup_ubuntu(
         downloads_path,
         "ubuntu",
         gpg_key_name,
+        repo_subpath,
     )
 
 
 @pytest.fixture(scope="module")
-def setup_macos(root_url, salt_release, shell):
+def setup_macos(root_url, salt_release, shell, repo_subpath):
 
     arch = os.environ.get("SALT_REPO_ARCH") or "x86_64"
     if arch == "aarch64":
@@ -533,7 +561,7 @@ def setup_macos(root_url, salt_release, shell):
 
     if packaging.version.parse(salt_release) > packaging.version.parse("3005"):
         mac_pkg = f"salt-{salt_release}-py3-{arch}.pkg"
-        mac_pkg_url = f"{root_url}/macos/minor/{salt_release}/{mac_pkg}"
+        mac_pkg_url = f"{root_url}/macos/{repo_subpath}/{salt_release}/{mac_pkg}"
     else:
         mac_pkg_url = f"{root_url}/macos/{salt_release}/{mac_pkg}"
         mac_pkg = f"salt-{salt_release}-macos-{arch}.pkg"
@@ -555,7 +583,7 @@ def setup_macos(root_url, salt_release, shell):
 
 
 @pytest.fixture(scope="module")
-def setup_windows(root_url, salt_release, shell):
+def setup_windows(root_url, salt_release, shell, repo_subpath):
 
     root_dir = pathlib.Path(r"C:\Program Files\Salt Project\Salt")
 
@@ -570,7 +598,7 @@ def setup_windows(root_url, salt_release, shell):
             if arch.lower() != "x86":
                 arch = arch.upper()
             win_pkg = f"Salt-Minion-{salt_release}-Py3-{arch}.msi"
-        win_pkg_url = f"{root_url}/windows/minor/{salt_release}/{win_pkg}"
+        win_pkg_url = f"{root_url}/windows/{repo_subpath}/{salt_release}/{win_pkg}"
         ssm_bin = root_dir / "ssm.exe"
     else:
         win_pkg = f"salt-{salt_release}-windows-{arch}.exe"
