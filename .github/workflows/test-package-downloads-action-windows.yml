@@ -23,6 +23,10 @@ on:
         required: true
         type: string
         description: The environment to run tests against
+      latest-release:
+        required: true
+        type: string
+        description: The latest salt release
       python-version:
         required: false
         type: string
@@ -273,6 +277,7 @@ jobs:
         env:
           INSTALL_TYPE: ${{ matrix.install_type }}
           SALT_RELEASE: "${{ inputs.salt-version }}"
+          LATEST_SALT_RELEASE: "${{ inputs.latest-release }}"
           SALT_REPO_ARCH: ${{ matrix.install_arch }}
           SALT_REPO_TYPE: ${{ inputs.environment }}
           SALT_REPO_USER: ${{ secrets.SALT_REPO_USER }}
@@ -290,6 +295,7 @@ jobs:
         env:
           INSTALL_TYPE: ${{ matrix.install_type }}
           SALT_RELEASE: "${{ inputs.salt-version }}"
+          LATEST_SALT_RELEASE: "${{ inputs.latest-release }}"
           SALT_REPO_ARCH: ${{ matrix.install_arch }}
           SALT_REPO_TYPE: ${{ inputs.environment }}
           SALT_REPO_USER: ${{ secrets.SALT_REPO_USER }}

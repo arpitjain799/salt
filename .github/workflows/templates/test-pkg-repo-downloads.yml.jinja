@@ -19,6 +19,7 @@
       salt-version: "${{ needs.prepare-workflow.outputs.salt-version }}"
       environment: <{ gh_environment }>
       skip-code-coverage: true
+      latest-release: "${{ needs.prepare-workflow.outputs.latest-release }}"
       <%- if gh_environment == "release" %>
       artifacts-from-workflow: staging.yml
       <%- endif %>
@@ -46,6 +47,7 @@
       salt-version: "${{ needs.prepare-workflow.outputs.salt-version }}"
       environment: <{ gh_environment }>
       skip-code-coverage: true
+      latest-release: "${{ needs.prepare-workflow.outputs.latest-release }}"
       <%- if gh_environment == "release" %>
       artifacts-from-workflow: staging.yml
       <%- endif %>
@@ -73,6 +75,7 @@
       salt-version: "${{ needs.prepare-workflow.outputs.salt-version }}"
       environment: <{ gh_environment }>
       skip-code-coverage: true
+      latest-release: "${{ needs.prepare-workflow.outputs.latest-release }}"
       <%- if gh_environment == "release" %>
       artifacts-from-workflow: staging.yml
       <%- endif %>
